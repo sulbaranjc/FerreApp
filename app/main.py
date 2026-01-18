@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Annotated
 from decimal import Decimal
 
-from app.database import fetch_all_productos, fetch_producto_by_id, insert_producto, update_producto
+from app.database import fetch_all_productos, fetch_producto_by_id, insert_producto, update_producto, delete_producto
 
 app = FastAPI(
     title="FerreApp API",
@@ -256,3 +256,38 @@ def actualizar_producto(producto_id: int, producto: ProductoUpdate):
     # 5. Mapear y retornar
     productos_db = map_rows_to_productos([row_actualizado])
     return productos_db[0]
+
+
+@app.delete("/productos/{producto_id}", status_code=200)
+def eliminar_producto(producto_id: int):
+    """
+    Elimina un producto existente de la base de datos.
+    
+    - Valida que el producto existe (404 si no)
+    - Elimina de MySQL
+    - Retorna mensaje de éxito
+    """
+    # 1. Validar que el producto existe
+    row_existente = fetch_producto_by_id(producto_id)
+    
+    if not row_existente:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Producto con ID {producto_id} no encontrado"
+        )
+    
+    # 2. Eliminar el producto de MySQL
+    eliminado = delete_producto(producto_id)
+    
+    # 3. Validar que la eliminación fue exitosa
+    if not eliminado:
+        raise HTTPException(
+            status_code=500,
+            detail="Error al eliminar el producto de la base de datos"
+        )
+    
+    # 4. Retornar mensaje de éxito
+    return {
+        "mensaje": "Producto eliminado exitosamente",
+        "id_producto": producto_id
+    }
