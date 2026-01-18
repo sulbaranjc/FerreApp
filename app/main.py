@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Annotated
 from decimal import Decimal
 
-from app.database import fetch_all_productos, fetch_producto_by_id
+from app.database import fetch_all_productos, fetch_producto_by_id, insert_producto, update_producto
 
 app = FastAPI(
     title="FerreApp API",
@@ -162,4 +162,97 @@ def obtener_producto(producto_id: int):
     productos_db = map_rows_to_productos([row])
     
     # 4. Retornar el primer (y único) elemento
+    return productos_db[0]
+
+
+@app.post("/productos", response_model=Producto, status_code=201)
+def crear_producto(producto: ProductoCreate):
+    """
+    Crea un nuevo producto en la base de datos.
+    
+    - Valida datos con Pydantic (ProductoCreate)
+    - Inserta en MySQL
+    - Retorna el producto creado con ID asignado
+    """
+    # 1. Insertar el producto en MySQL (retorna ID)
+    nuevo_id = insert_producto(
+        nombre=producto.nombre,
+        descripcion=producto.descripcion,
+        precio=producto.precio,
+        stock=producto.stock,
+        categoria=producto.categoria,
+        codigo_sku=producto.codigo_sku,
+        activo=producto.activo
+    )
+    
+    # 2. Validar que la inserción fue exitosa
+    if not nuevo_id or nuevo_id == 0:
+        raise HTTPException(
+            status_code=500,
+            detail="Error al insertar el producto en la base de datos"
+        )
+    
+    # 3. Recuperar el producto creado desde la BD
+    row = fetch_producto_by_id(nuevo_id)
+    
+    if not row:
+        raise HTTPException(
+            status_code=500,
+            detail="Error al recuperar el producto recién creado"
+        )
+    
+    # 4. Mapear y retornar
+    productos_db = map_rows_to_productos([row])
+    return productos_db[0]
+
+
+@app.put("/productos/{producto_id}", response_model=Producto)
+def actualizar_producto(producto_id: int, producto: ProductoUpdate):
+    """
+    Actualiza un producto existente en la base de datos.
+    
+    - Valida que el producto existe (404 si no)
+    - Valida datos con Pydantic (ProductoUpdate)
+    - Actualiza en MySQL
+    - Retorna el producto actualizado
+    """
+    # 1. Validar que el producto existe
+    row_existente = fetch_producto_by_id(producto_id)
+    
+    if not row_existente:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Producto con ID {producto_id} no encontrado"
+        )
+    
+    # 2. Actualizar el producto en MySQL
+    actualizado = update_producto(
+        producto_id=producto_id,
+        nombre=producto.nombre,
+        descripcion=producto.descripcion,
+        precio=producto.precio,
+        stock=producto.stock,
+        categoria=producto.categoria,
+        codigo_sku=producto.codigo_sku,
+        activo=producto.activo
+    )
+    
+    # 3. Validar que la actualización fue exitosa
+    if not actualizado:
+        raise HTTPException(
+            status_code=500,
+            detail="Error al actualizar el producto en la base de datos"
+        )
+    
+    # 4. Recuperar el producto actualizado desde la BD
+    row_actualizado = fetch_producto_by_id(producto_id)
+    
+    if not row_actualizado:
+        raise HTTPException(
+            status_code=500,
+            detail="Error al recuperar el producto actualizado"
+        )
+    
+    # 5. Mapear y retornar
+    productos_db = map_rows_to_productos([row_actualizado])
     return productos_db[0]
