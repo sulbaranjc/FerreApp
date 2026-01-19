@@ -2,15 +2,187 @@
 ## API de Gestión de Productos de Ferretería
 
 ## 📖 Índice
-1. [Descripción General](#descripción-general)
-2. [Conceptos de Arquitectura de Software](#conceptos-de-arquitectura-de-software)
-3. [Librerías Python y su Función](#librerías-python-y-su-función)
-4. [Estructura del Proyecto](#estructura-del-proyecto)
-5. [Instalación y Ejecución](#instalación-y-ejecución)
-6. [Endpoints de la API](#endpoints-de-la-api)
-7. [Validaciones Implementadas](#validaciones-implementadas)
-8. [Patrones de Diseño Utilizados](#patrones-de-diseño-utilizados)
-9. [Ejercicios Prácticos para Estudiantes](#ejercicios-prácticos-para-estudiantes)
+1. [Caso de Uso: Historia de Ferremax](#caso-de-uso-historia-de-ferremax)
+2. [El Problema a Resolver](#el-problema-a-resolver)
+3. [Especificación de Requisitos](#especificación-de-requisitos)
+4. [Descripción General](#descripción-general)
+5. [Conceptos de Arquitectura de Software](#conceptos-de-arquitectura-de-software)
+6. [Librerías Python y su Función](#librerías-python-y-su-función)
+7. [Estructura del Proyecto](#estructura-del-proyecto)
+8. [Instalación y Ejecución](#instalación-y-ejecución)
+9. [Endpoints de la API](#endpoints-de-la-api)
+10. [Validaciones Implementadas](#validaciones-implementadas)
+11. [Patrones de Diseño Utilizados](#patrones-de-diseño-utilizados)
+12. [Ejercicios Prácticos para Estudiantes](#ejercicios-prácticos-para-estudiantes)
+
+---
+
+## 🏢 Caso de Uso: Historia de Ferremax
+
+### El Contexto Histórico
+
+**Ferremax** es una ferretería familiar ubicada en el corazón de la ciudad, con más de 30 años de trayectoria. Comenzó vendiendo herramientas básicas en un pequeño local y, gracias a su excelente servicio, ha crecido hasta tener 3 sucursales y un catálogo de más de **1,000 productos diferentes**.
+
+El dueño, Don Carlos, ha visto evolucionar el comercio desde los cuadernos manuales hasta las primeras computadoras en los años 90. Sin embargo, hasta hace poco seguía usando:
+- **Fichas en cartón** para registrar cada producto (nombre, código, precio)
+- **Cuadernos de inventario** anotados a mano
+- **Llamadas telefónicas** para consultar disponibilidad
+- **Facturas manuscritas** que se perdían constantemente
+- **Cálculos manuales** que cometían errores constantemente
+
+### El Punto de Inflexión
+
+El año 2024, durante una sesión de capacitación en tecnología para pymes, Don Carlos descubrió que una **API REST** podría revolucionar su negocio. Vio cómo otras ferrerías usaban sistemas digitales y se dio cuenta de que:
+
+1. **Pérdida de información:** No sabía con exactitud cuántas herramientas tenía en inventario
+2. **Ineficiencia:** Los clientes llamaban para preguntar disponibilidad y nadie podía responder rápido
+3. **Errores en precios:** Los vendedores a veces cobraban precios incorrectos
+4. **Falta de trazabilidad:** No sabía qué productos se vendían más
+5. **Clientes frustrados:** Viajaban al local sin saber si había el producto que buscaban
+
+### La Decisión
+
+Don Carlos decidió **invertir en un sistema digital** para:
+- ✅ Registrar productos de forma ordenada y consistente
+- ✅ Consultar inventario en tiempo real
+- ✅ Permitir actualizaciones rápidas de precios y stock
+- ✅ Eliminar productos discontinuados
+- ✅ Generar reportes confiables
+- ✅ Ofrecer a clientes una **API pública** para consultar catálogo
+
+---
+
+## 🎯 El Problema a Resolver
+
+Don Carlos contrata a un equipo de **desarrolladores junior** (ustedes) para construir la solución. El objetivo es crear una **API REST moderna, escalable y segura** que permita gestionar el catálogo de productos de Ferremax.
+
+### Requisitos del Negocio
+
+#### 1. **Datos de Productos a Gestionar**
+
+Cada producto en Ferremax tiene la siguiente información:
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   PRODUCTO                          │
+├─────────────────────────────────────────────────────┤
+│ • ID único (número secuencial)                      │
+│ • Nombre (ej: "Martillo 16oz")                      │
+│ • Descripción (detalles del producto)               │
+│ • Precio (en dólares, con centavos)                 │
+│ • Stock disponible (cantidad en almacén)            │
+│ • Categoría (Herramientas, Tornillería, etc.)       │
+│ • Código SKU (código único de inventario)           │
+│ • Estado (activo o inactivo)                        │
+│ • Fecha de creación (cuándo se registró)            │
+└─────────────────────────────────────────────────────┘
+```
+
+#### 2. **Operaciones Necesarias (CRUD)**
+
+La API debe permitir:
+
+┌─────────────────────────────────────────────────────────────────────┐
+| Operación | Descripción | Endpoint (sugerido)                       |
+|-----------|-------------|---------------------                      |
+| **Create** | Agregar nuevo producto | `POST /productos`             |
+| **Read** | Listar todos los productos | `GET /productos`            |
+| **Read** | Obtener un producto por ID | `GET /productos/{id}`       |
+| **Update** | Actualizar producto existente | `PUT /productos/{id}`  |
+| **Delete** | Eliminar un producto | `DELETE /productos/{id}`        |
+└─────────────────────────────────────────────────────────────────────┘
+#### 3. **Ejemplos de Productos Reales**
+
+La Ferretería Ferremax tiene estos productos en su catálogo inicial:
+
+```json
+{
+  "nombre": "Martillo 16oz",
+  "descripcion": "Martillo de acero con mango ergonómico",
+  "precio": 12.50,
+  "stock": 25,
+  "categoria": "Herramientas",
+  "codigo_sku": "MART-16OZ",
+  "activo": true
+}
+```
+
+```json
+{
+  "nombre": "Taladro eléctrico",
+  "descripcion": "Taladro eléctrico 500W",
+  "precio": 65.99,
+  "stock": 10,
+  "categoria": "Herramientas eléctricas",
+  "codigo_sku": "TAL-500W",
+  "activo": true
+}
+```
+
+```json
+{
+  "nombre": "Destornillador plano",
+  "descripcion": "Destornillador plano 5mm",
+  "precio": 4.20,
+  "stock": 40,
+  "categoria": "Herramientas",
+  "codigo_sku": "DEST-PL-5",
+  "activo": true
+}
+```
+
+---
+
+## 📋 Especificación de Requisitos
+
+### Requisitos de Datos (Tabla: `producto`)
+
+```sql
+CREATE TABLE producto (
+  id_producto INT UNSIGNED AUTO_INCREMENT,           -- ID único, autoincremental
+  nombre VARCHAR(80) NOT NULL,                        -- Nombre obligatorio, máx 80 caracteres
+  descripcion VARCHAR(255) NULL,                      -- Descripción opcional, máx 255 caracteres
+  precio DECIMAL(10,2) NOT NULL,                      -- Precio obligatorio: 8 dígitos + 2 decimales
+  stock INT NOT NULL,                                 -- Stock obligatorio, número entero
+  categoria VARCHAR(50) NOT NULL,                     -- Categoría obligatoria, máx 50 caracteres
+  codigo_sku VARCHAR(20) NOT NULL,                    -- Código SKU único, máx 20 caracteres
+  activo BOOLEAN NOT NULL DEFAULT TRUE,               -- Estado: activo por defecto
+  
+  CONSTRAINT pk_producto PRIMARY KEY (id_producto),
+  CONSTRAINT uq_producto_sku UNIQUE (codigo_sku)      -- El SKU debe ser único
+);
+```
+
+### Requisitos de Validación (Reglas de Negocio)
+
+Estos datos **DEBEN ser validados** cuando se creen o actualicen productos:
+
+| Campo | Validación | Ejemplo válido | Ejemplo inválido |
+|-------|-----------|-----------------|-----------------|
+| **nombre** | No vacío, máx 80 caracteres | "Martillo 16oz" | "" o cadena > 80 chars |
+| **descripcion** | Opcional, máx 255 caracteres | "Martillo de acero" | cadena > 255 chars |
+| **precio** | Positivo, máx 999,999.99 | 12.50 | -5.00, 1000000.00 |
+| **stock** | No negativo, entero | 25, 0 | -5, 3.5 |
+| **categoria** | No vacío, máx 50 caracteres | "Herramientas" | "" o > 50 chars |
+| **codigo_sku** | No vacío, único, máx 20 caracteres | "MART-16OZ" | "" o duplicado |
+| **activo** | Booleano | true, false | "si", 1 |
+
+### Requisitos Funcionales de la API
+
+1. ✅ **Crear producto**: Validar datos antes de insertar
+2. ✅ **Leer todos**: Retornar lista de productos con formato JSON
+3. ✅ **Leer por ID**: Retornar producto específico o error 404
+4. ✅ **Actualizar**: Modificar producto existente con validaciones
+5. ✅ **Eliminar**: Borrar producto de la base de datos
+6. ✅ **Manejo de errores**: Respuestas HTTP adecuadas (200, 201, 400, 404, 500)
+
+### Requisitos Técnicos
+
+- **Tecnología:** FastAPI (Python 3.10+)
+- **Base de datos:** MySQL / MariaDB
+- **Validación:** Pydantic v2
+- **Servidor:** Uvicorn (ASGI)
+- **Patrón:** Arquitectura en capas (API → Lógica → Datos → BD)
 
 ---
 
